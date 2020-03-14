@@ -1,6 +1,13 @@
 
-1.0 Create database
+# Neo4j
 
+## Lista de exercícios
+### Professor: Marcio Jasinski
+
+#### 1.0 Create database
+
+
+```python
 CREATE (TheMatrix:Movie {title:'The Matrix', released:1999, tagline:'Welcome to the Real World'})
 CREATE (Keanu:Person {name:'Keanu Reeves', born:1964})
 CREATE (Carrie:Person {name:'Carrie-Anne Moss', born:1967})
@@ -506,33 +513,281 @@ CREATE
   (JessicaThompson)-[:REVIEWED {summary:'A solid romp', rating:68}]->(TheDaVinciCode),
   (JamesThompson)-[:REVIEWED {summary:'Fun, but a little far fetched', rating:65}]->(TheDaVinciCode),
   (JessicaThompson)-[:REVIEWED {summary:'You had me at Jerry', rating:92}]->(JerryMaguire)
-  
- 
- 
-1.1 Retrieve all nodes
+```
+
+#### 1.1 Retrieve all nodes
+
+
+
+
+
+```python
 MATCH (n) RETURN n
+```
 
-1.2 Examine the schema
+#### 1.2 Examine the schema
+
+
+
+```python
 CALL db.schema()
+```
 
-1.3 Retrieve all person nodes
+#### 1.3 Retrieve all person nodes
+
+
+```python
 MATCH (p:Person) RETURN p
+```
 
-1.4 Retrieve all movies nodes
+#### 1.4 Retrieve all movies nodes
+
+
+
+```python
 MATCH (m:Movie) RETURN m
+```
 
-2.1 Retrieve all Movie nodes that have a released property value of 2003.
+#### 2.1 Retrieve all Movie nodes that have a released property value of 2003.
+
+
+```python
 MATCH (m:Movie {released:2003}) RETURN m
+```
 
-2.3 Query the database for all property keys.
+#### 2.3 Query the database for all property keys.
+
+
+```python
 CALL db.propertyKeys
+```
 
-2.4 Retrieve all Movies released in a specific year, returning their titles.
+#### 2.4 Retrieve all Movies released in a specific year, returning their titles.
+
+
+```python
 MATCH (m:Movie {released: 2006}) RETURN m.title
+```
 
-2.5 Display title, released, and tagline values for every Movie node in the graph.
+#### 2.5 Display title, released, and tagline values for every Movie node in the graph.
+
+
+```python
 MATCH (m:Movie) RETURN m.title, m.released, m.tagline
+```
 
-2.6: Display more user-friendly headers in the table
+#### 2.6: Display more user-friendly headers in the table
+
+
+```python
 MATCH (m:Movie) RETURN m.title AS `movie title`, m.released AS released, m.tagline AS tagLine
+```
 
+#### 3.1 Retrieve all people who wrote the movie Speed Racer
+
+
+```python
+MATCH (p:Person)-[:WROTE]->(:Movie {title: 'Speed Racer'}) RETURN p.name
+```
+
+####  3.2 Retrieve all movies that are connected to the person, Tom Hanks
+
+
+```python
+MATCH (m:Movie)<--(:Person {name: 'Tom Hanks'}) RETURN m.title
+```
+
+#### 3.4 Retrieve information about the relationships Tom Hanks has with the set of movies retrieved earlier
+
+
+```python
+MATCH (m:Movie)-[rel]-(:Person {name: 'Tom Hanks'}) RETURN m.title, type(rel)
+```
+
+#### 3.5 Retrieve information about the roles that Tom Hanks acted in 
+
+
+```python
+MATCH (m:Movie)-[rel:ACTED_IN]-(:Person {name: 'Tom Hanks'}) RETURN m.title, rel.roles
+```
+
+#### 4.1 Retrieve all movies that Tom Cruise acted in
+
+
+```python
+MATCH (a:Person)-[:ACTED_IN]->(m:Movie)
+WHERE a.name = 'Tom Cruise'
+RETURN m.title as Movie
+```
+
+#### 4.2 Retrieve all people that were born in the 70’s
+
+
+```python
+MATCH (a:Person)
+WHERE a.born >= 1970 AND a.born < 1980
+RETURN a.name as Name, a.born as `Year Born`
+```
+
+#### 4.3 Retrieve the actors who acted in the movie The Matrix who were born after 1960
+
+
+```python
+MATCH (a:Person)-[:ACTED_IN]->(m:Movie)
+WHERE a.born > 1960 AND m.title = 'The Matrix'
+RETURN a.name as Name, a.born as `Year Born`
+```
+
+#### 4.4 Retrieve all movies by testing the node label and a property 
+
+
+```python
+MATCH (m)
+WHERE m:Movie AND m.released = 2000
+RETURN m.title
+```
+
+#### 4.5 Retrieve all people that wrote movies by testing the relationship between two nodes
+
+
+```python
+MATCH (a)-[rel]->(m)
+WHERE a:Person AND type(rel) = 'WROTE' AND m:Movie
+RETURN a.name as Name, m.title as Movie
+```
+
+#### 4.6 Retrieve all people in the graph that do not have a property 
+
+
+```python
+MATCH (a:Person)
+WHERE NOT exists(a.born)
+RETURN a.name as Name
+```
+
+#### 4.7 Retrieve all people related to movies where the relationship has a property
+
+
+```python
+MATCH (a:Person)-[rel]->(m:Movie)
+WHERE exists(rel.rating)
+RETURN a.name as Name, m.title as Movie, rel.rating as Rating
+```
+
+#### 4.8 Retrieve all actors whose name begins with James
+
+
+```python
+MATCH (a:Person)-[:ACTED_IN]->(:Movie)
+WHERE a.name STARTS WITH 'James'
+RETURN a.name
+```
+
+#### 4.9 Retrieve all REVIEWED relationships from the graph with filtered results
+
+
+```python
+MATCH (:Person)-[r:REVIEWED]->(m:Movie)
+WHERE toLower(r.summary) CONTAINS 'fun'
+RETURN  m.title as Movie, r.summary as Review, r.rating as Rating
+```
+
+#### 4.10 Retrieve all people who have produced a movie, but have not directed a movie
+
+
+```python
+MATCH (a:Person)-[:PRODUCED]->(m:Movie)
+WHERE NOT ((a)-[:DIRECTED]->(:Movie))
+RETURN a.name, m.title
+```
+
+#### 4.11 Retrieve the movies and their actors where one of the actors also directed the movie
+
+
+```python
+MATCH (a1:Person)-[:ACTED_IN]->(m:Movie)<-[:ACTED_IN]-(a2:Person)
+WHERE exists( (a2)-[:DIRECTED]->(m) )
+RETURN  a1.name as Actor, a2.name as `Actor/Director`, m.title as Movie
+```
+
+#### 4.12 Retrieve all movies that were released in a set of years 
+
+
+```python
+MATCH (m:Movie)
+WHERE m.released in [2000, 2004, 2008]
+RETURN m.title, m.released
+```
+
+#### 4.13 Retrieve the movies that have an actor’s role that is the name of the movie 
+
+
+```python
+MATCH (a:Person)-[r:ACTED_IN]->(m:Movie)
+WHERE m.title in r.roles
+RETURN  m.title as Movie, a.name as Actor
+```
+
+#### 5.1 Retrieve data using multiple MATCH patterns.
+
+
+```python
+MATCH (a:Person)-[:ACTED_IN]->(m:Movie)<-[:DIRECTED]-(d:Person),
+      (a2:Person)-[:ACTED_IN]->(m)
+WHERE a.name = 'Gene Hackman'
+RETURN m.title as movie, d.name AS director , a2.name AS `co-actors`
+```
+
+#### 5.2 Retrieve particular nodes that have a relationship.
+
+
+```python
+MATCH (p1:Person)-[:FOLLOWS]-(p2:Person)
+WHERE p1.name = 'James Thompson'
+RETURN p1, p2
+```
+
+#### 5.3 Modify the query to retrieve nodes that are exactly three hops away.
+
+
+```python
+MATCH (p1:Person)-[:FOLLOWS*3]-(p2:Person)
+WHERE p1.name = 'James Thompson'
+RETURN p1, p2
+```
+
+#### 5.4 Modify the query to retrieve nodes that are one and two hops away.
+
+
+```python
+MATCH (p1:Person)-[:FOLLOWS*1..2]-(p2:Person)
+WHERE p1.name = 'James Thompson'
+RETURN p1, p2
+```
+
+#### 5.5 Modify the query to retrieve particular nodes that are connected no matter how many hops are required.
+
+
+```python
+MATCH (p1:Person)-[:FOLLOWS*]-(p2:Person)
+WHERE p1.name = 'James Thompson'
+RETURN p1, p2
+```
+
+#### 5.6 Specify optional data to be retrieved during the query.
+
+
+```python
+MATCH (p:Person)
+WHERE p.name STARTS WITH 'Tom'
+OPTIONAL MATCH (p)-[:DIRECTED]->(m:Movie)
+RETURN p.name, m.title
+```
+
+#### 5.7 Retrieve nodes by collecting a list.
+
+
+```python
+MATCH (p:Person)-[:ACTED_IN]->(m:Movie)
+RETURN p.name as actor, collect(m.title) AS `movie list`
+```
